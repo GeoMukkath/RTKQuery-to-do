@@ -2,14 +2,19 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faUpload } from "@fortawesome/free-solid-svg-icons";
 import { useState } from "react";
-import { useGetTodosQuery } from "../api/apiSlice";
+import {
+  useGetTodosQuery,
+  useUpdateTodoMutation,
+  useDeleteTodoMutation,
+  useAddTodoMutation,
+} from "../api/apiSlice";
 
 const TodoList = () => {
   const [newTodo, setNewTodo] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    //addTodo
+    addTodo({ userId: 1, title: newTodo, completed: false });
     setNewTodo("");
   };
 
@@ -31,24 +36,45 @@ const TodoList = () => {
     </form>
   );
 
-  let content;
   // Define conditional content
 
   const { data, error, isLoading, isSuccess } = useGetTodosQuery();
+  const [addTodo] = useAddTodoMutation();
+  const [updateTodo] = useUpdateTodoMutation();
+  const [deleteTodo] = useDeleteTodoMutation();
 
   return (
     <main>
       <h1>Todo List</h1>
       {newItemSection}
       {error && <p>An error occured</p>}
-      {console.log(error)}
       {isLoading && <p>Loading...</p>}
 
       {isSuccess && (
         <>
           {data &&
             data.map((todo) => {
-              return <div key={todo.id}>{todo.title}</div>;
+              return (
+                <article key={todo.id}>
+                  <div className="todo">
+                    <input
+                      type="checkbox"
+                      checked={todo.completed}
+                      id={todo.id}
+                      onChange={() =>
+                        updateTodo({ ...todo, completed: !todo.completed })
+                      }
+                    />
+                    <label htmlFor={todo.id}>{todo.title}</label>
+                  </div>
+                  <button
+                    className="trash"
+                    onClick={() => deleteTodo({ id: todo.id })}
+                  >
+                    <FontAwesomeIcon icon={faTrash} />
+                  </button>
+                </article>
+              );
             })}
         </>
       )}
